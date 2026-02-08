@@ -513,6 +513,11 @@ char	   *event_source;
 bool		row_security;
 bool		check_function_bodies = true;
 
+// new option for csci543 project 1
+bool 		btree_leaf_prefetch = false;
+bool 		btree_linear_scan = false;
+int 		btree_scan_threshold = 100;
+
 /*
  * This GUC exists solely for backward compatibility, check its definition for
  * details.
@@ -2022,6 +2027,28 @@ struct config_bool ConfigureNamesBool[] =
 			gettext_noop("Enables a physical standby to synchronize logical failover replication slots from the primary server."),
 		},
 		&sync_replication_slots,
+		false,
+		NULL, NULL, NULL
+	},
+
+	// new options for project 1
+	// the prefetch switch: this entry registers the toggle for your leaf-page lookahead optimization
+	{
+		{"btree_leaf_prefetch", PGC_USERSET, DEVELOPER_OPTIONS,
+			gettext_noop("Enable leaf-page prefetching in B-Tree scans."),
+			NULL
+		},
+		&btree_leaf_prefetch,
+		false,
+		NULL, NULL, NULL
+	},
+	// the linear scan switch: this entry registers the toggle that tells the search logic to use a linear scan instead of a binary search
+	{
+		{"btree_linear_scan", PGC_USERSET, DEVELOPER_OPTIONS,
+			gettext_noop("Enable linear scan instead of binary search in B-Tree pages."),
+			NULL
+		},
+		&btree_linear_scan,
 		false,
 		NULL, NULL, NULL
 	},
@@ -3652,6 +3679,16 @@ struct config_int ConfigureNamesInt[] =
 		SCRAM_SHA_256_DEFAULT_ITERATIONS, 1, INT_MAX,
 		NULL, NULL, NULL
 	},
+	// Integer threshold for linear scan logic: this is the limit on how many items to scan before giving up
+	{
+    {"btree_scan_threshold", PGC_USERSET, DEVELOPER_OPTIONS,
+        gettext_noop("Threshold for switching to linear scan in B-Tree."),
+        NULL
+    },
+    &btree_scan_threshold,
+    100, 0, INT_MAX,
+    NULL, NULL, NULL
+},
 
 	/* End-of-list marker */
 	{

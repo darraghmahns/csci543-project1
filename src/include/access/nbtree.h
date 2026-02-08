@@ -1329,4 +1329,9 @@ extern IndexBuildResult *btbuild(Relation heap, Relation index,
 								 struct IndexInfo *indexInfo);
 extern void _bt_parallel_build_main(dsm_segment *seg, shm_toc *toc);
 
+/* GUC variables for B-Tree optimizations */
+extern bool btree_leaf_prefetch;
+extern bool btree_linear_scan;
+extern int btree_scan_threshold;
+
 #endif							/* NBTREE_H */

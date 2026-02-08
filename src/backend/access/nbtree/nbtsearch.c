@@ -2208,6 +2208,16 @@ _bt_readnextpage(IndexScanDesc scan, BlockNumber blkno, ScanDirection dir)
 			so->currPos.buf = _bt_getbuf(rel, blkno, BT_READ);
 			page = BufferGetPage(so->currPos.buf);
 			opaque = BTPageGetOpaque(page);
+
+			/* * CSCI 543: Leaf-page prefetching logic.
+             * We just landed on a new page (page 'blkno'). 
+             * Now we hint the OS to prefetch the sibling of THIS page.
+             */
+            if (btree_leaf_prefetch && BlockNumberIsValid(opaque->btpo_next))
+            {
+                PrefetchBuffer(rel, MAIN_FORKNUM, opaque->btpo_next);
+            }
+
 			/* check for deleted page */
 			if (!P_IGNORE(opaque))
 			{
