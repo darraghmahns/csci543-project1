@@ -366,6 +366,41 @@ _bt_binsrch(Relation rel,
 	if (unlikely(high < low))
 		return low;
 
+	/**
+	 * CSCI 543: Linear Scan Optimization
+	 * If enabled and under the threshold, use a loop isntead of binary search
+	 */
+	if (btree_linear_scan && high < btree_scan_threshold)
+    {
+        OffsetNumber i;
+        int32       lin_cmpval = key->nextkey ? 0 : 1;
+
+        elog(LOG, "CSCI 543: Linear scan on page with %d items", high);
+
+        /* Start from the first data key and find the first item >= target */
+        for (i = low; i <= high; i = OffsetNumberNext(i))
+        {
+            if (_bt_compare(rel, key, page, i) < lin_cmpval)
+                break;
+        }
+
+        /* * i now points to the first record >= key (or > key if nextkey is true).
+         * This matches the state of 'low' at the end of the original binary search.
+         */
+        if (P_ISLEAF(opaque))
+        {
+            if (key->backward)
+                return OffsetNumberPrev(i);
+            return i;
+        }
+
+        /* * On internal pages, we must return the child pointer for the last 
+         * key < (or <=) the search key. This requires stepping back.
+         */
+        return OffsetNumberPrev(i);
+    }
+
+
 	/*
 	 * Binary search to find the first key on the page >= scan key, or first
 	 * key > scankey when nextkey is true.
