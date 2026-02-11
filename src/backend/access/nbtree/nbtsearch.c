@@ -375,7 +375,12 @@ _bt_binsrch(Relation rel,
         OffsetNumber i;
         int32       lin_cmpval = key->nextkey ? 0 : 1;
 
-        elog(LOG, "CSCI 543: Linear scan on page with %d items", high);
+        // elog(LOG, "CSCI 543: Linear scan on page with %d items", high);
+
+		/* SAFETY: If high < low, the page is empty or only has a high key. 
+         * We should have caught this above, but let's be safe. */
+        if (high < low)
+             return low;
 
         /* Start from the first data key and find the first item >= target */
         for (i = low; i <= high; i = OffsetNumberNext(i))
